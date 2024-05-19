@@ -41,15 +41,19 @@ public class AESAlgorithm {
         //     }
         //     System.out.println();
         // }
-        this.roundsKeys.add(stateMatrix);
+        int[][] roundKey = new int[stateMatrix.length][stateMatrix.length]; 
+        for (int i = 0; i < stateMatrix.length; i++) {
+            for (int j = 0; j < stateMatrix[i].length; j++) {
+                roundKey[i][j] = stateMatrix[j][i];
+            }
+        }
+        this.roundsKeys.add(roundKey);
     }
 
     private int[] getLastW() {
         int[][] roundKey = roundsKeys.peek();
         int[] w = new int[roundKey.length]; 
-        for (int i = 0; i < roundKey.length; i++) {
-            w[i] = roundKey[i][roundKey.length-1];
-        }
+        w = roundKey[roundKey.length-1];
         return w;
     }
 
