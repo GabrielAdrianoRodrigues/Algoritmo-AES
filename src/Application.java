@@ -15,8 +15,9 @@ public class Application {
         // System.out.println(Digite a chave de criptografia);
         // c.getSelectedFile().toPath()
         
-        byte[] teste = "DESENVOLVIMENTO!".getBytes();
-
+        byte[] teste = "DESENVOLVIMENTOO123".getBytes();
+        AESCipher.buildEncryptBlocks(teste);
+        // AESCipher.encrypt(teste, "65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80");
         // AESAlgorithm.generateRoundsKeys("65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80").forEach(x -> {
         //     System.out.println();
         //     for (int i = 0; i < x.length; i++) {

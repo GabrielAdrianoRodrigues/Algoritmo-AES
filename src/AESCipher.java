@@ -7,18 +7,36 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public abstract class AESCipher {
-    private static List<int[][]> roundsKeys = new ArrayList<>();
-    private Queue<int[][]> encryptBlocks = new LinkedList<>();
+    private static List<int[][]> roundsKeys     = new ArrayList<>();
+    private static Queue<int[][]> encryptBlocks = new LinkedList<>();
+    private static final int[][] additionalBlock =  new int[][]{{16, 16, 16, 16},
+                                                                {16, 16, 16, 16}, 
+                                                                {16, 16, 16, 16}, 
+                                                                {16, 16, 16, 16}};
 
-    public void encrypt(byte[] toEncrypt, String key) {
-        generateRoundsKeys(key);    
+    public static void encrypt(byte[] toEncrypt, String key) {
+        generateRoundsKeys(key); 
+        buildEncryptBlocks(toEncrypt);   
     }
 
-    public void buildEncryptBlocks(byte[] toBuild) {
-        if(toBuild.length % 16 == 0) {
-            
+    public static void buildEncryptBlocks(byte[] toBuild) {
+        if(toBuild.length % 16 == 0) {  
+            encryptBlocks.add(createBlocks(toBuild));
+            encryptBlocks.add(additionalBlock);
+        } else {
+            if (toBuild.length < 16) {
+                encryptBlocks.add(lessThanSixteenBlocks(toBuild));
+            } else {
+                byte[] toSixteen = new byte[16];
+                byte[] passSixteen = new byte[toBuild.length - 16];
+                IntStream.range(0, toBuild.length).forEach(x -> {
+                    if (x < 16) toSixteen[x] = toBuild[x];
+                    else passSixteen[x - 16] = toBuild[x];
+                });
+                encryptBlocks.add(createBlocks(toSixteen));
+                encryptBlocks.add(lessThanSixteenBlocks(passSixteen));
+            }
         }
-        int[][] stateMatrix = new int[4][4];
     }
 
     public static void generateRoundsKeys(String rawKey) {
@@ -36,6 +54,28 @@ public abstract class AESCipher {
         for (int i = 0, idx = 0; i < matrixSize; i++) {
             for (int j = 0; j < matrixSize; j++) {
                 stateMatrix[j][i] = key[idx++];
+            }
+        }
+        return stateMatrix;
+    }
+
+    private static int[][] createBlocks(byte[] bytes) {
+        int[][] stateMatrix = new int[4][4];
+        for (int i = 0, idx = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                stateMatrix[j][i] = bytes[idx++];
+            }
+        }
+        return stateMatrix;
+    }
+
+    private static int[][] lessThanSixteenBlocks(byte[] bytes) {
+        int[][] stateMatrix = new int[4][4];
+        for (int i = 0, idx = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                if (idx < bytes.length) stateMatrix[j][i] = bytes[idx++];
+                else stateMatrix[j][i] = 16 - idx;
+                
             }
         }
         return stateMatrix;
