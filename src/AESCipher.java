@@ -16,7 +16,8 @@ public abstract class AESCipher {
 
     public static void encrypt(byte[] toEncrypt, String key) {
         generateRoundsKeys(key); 
-        buildEncryptBlocks(toEncrypt);   
+        buildEncryptBlocks(toEncrypt);  
+        int[][] firstAddRoundKey = addRoundKey(encryptBlocks.poll(), roundsKeys.get(0)); 
     }
 
     public static void buildEncryptBlocks(byte[] toBuild) {
@@ -121,6 +122,16 @@ public abstract class AESCipher {
     private static int[] xorWords(int[] w1, int[] w2) {
         int[] result = new int[w1.length];
         IntStream.range(0, w1.length).forEach(x -> result[x] = w1[x] ^ w2[x]);
+        return result;
+    }
+
+    private static int[][] addRoundKey(int[][] block, int[][] roundKey) {
+        int[][] result = new int[block.length][block.length];
+        for (int i = 0; i < block.length; i++) {
+            for (int j = 0; j < block.length; j++) {
+                result[j][i] = block[j][i] ^ roundKey[j][i];
+            }
+        }
         return result;
     }
 
