@@ -1,46 +1,59 @@
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public abstract class AESCipher {
     private static List<int[][]> roundsKeys     = new ArrayList<>();
-    private static Queue<int[][]> encryptBlocks = new LinkedList<>();
-    private static final int[][] additionalBlock =  new int[][]{{16, 16, 16, 16},
-                                                                {16, 16, 16, 16}, 
-                                                                {16, 16, 16, 16}, 
-                                                                {16, 16, 16, 16}};
-
+    private static List<int[][]> encryptBlocks = new ArrayList<>();
+                                                                
     public static void encrypt(byte[] toEncrypt, String key) {
         generateRoundsKeys(key); 
-        buildEncryptBlocks(toEncrypt);  
-        int[][] firstAddRoundKey = addRoundKey(encryptBlocks.poll(), roundsKeys.get(0)); 
-    }
-
-    public static void buildEncryptBlocks(byte[] toBuild) {
-        if(toBuild.length % 16 == 0) {  
-            encryptBlocks.add(createBlocks(toBuild));
-            encryptBlocks.add(additionalBlock);
-        } else {
-            if (toBuild.length < 16) {
-                encryptBlocks.add(lessThanSixteenBlocks(toBuild));
-            } else {
-                byte[] toSixteen = new byte[16];
-                byte[] passSixteen = new byte[toBuild.length - 16];
-                IntStream.range(0, toBuild.length).forEach(x -> {
-                    if (x < 16) toSixteen[x] = toBuild[x];
-                    else passSixteen[x - 16] = toBuild[x];
-                });
-                encryptBlocks.add(createBlocks(toSixteen));
-                encryptBlocks.add(lessThanSixteenBlocks(passSixteen));
+        buildEncryptBlocks(toEncrypt);
+        int[][] a, b, c;
+        for(int i = 0; i < encryptBlocks.size(); i++) {
+            a = addRoundKey(encryptBlocks.get(i), roundsKeys.get(0));
+            for (int j = 1; j < 10; j++) {
+                //IntStream.range(0, a.length).forEach(x -> a[x] = S_BOX[a[x] >> 4][a[x] & ((1 << 4) - 1)]);
             }
         }
     }
 
-    public static void generateRoundsKeys(String rawKey) {
+    private static void buildEncryptBlocks(byte[] toBuild) {
+        if (toBuild.length < 16) {
+            encryptBlocks.add(createBlocks(toBuild));
+            return;
+        } 
+        IntStream.range(0, (toBuild.length / 16)).forEach(x -> encryptBlocks.add(createBlocks(Arrays.copyOfRange(toBuild, x*16, 16*(x+1)))));
+        if(toBuild.length % 16 == 0) {  
+            encryptBlocks.add(new int[][]{{16, 16, 16, 16},{16, 16, 16, 16},{16, 16, 16, 16},{16, 16, 16, 16}});
+            return;
+        } 
+        encryptBlocks.add(createBlocks(Arrays.copyOfRange(toBuild, toBuild.length / 16 * 16, toBuild.length)));
+    }
+
+    private static int[][] createBlocks(byte[] bytes) {
+        int[][] stateMatrix = new int[4][4];
+        for (int i = 0, idx = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                stateMatrix[j][i] = idx < bytes.length ? bytes[idx++] : 16 - idx;
+            }
+        }
+        return stateMatrix;
+    }
+
+    private static int[][] addRoundKey(int[][] block, int[][] roundKey) {
+        int[][] result = new int[block.length][block.length];
+        for (int i = 0; i < block.length; i++) {
+            for (int j = 0; j < block.length; j++) {
+                result[j][i] = block[j][i] ^ roundKey[j][i];
+            }
+        }
+        return result;
+    }
+
+    private static void generateRoundsKeys(String rawKey) {
         roundsKeys.add(keyExpansion(generateKey(rawKey.split(","))));
         IntStream.range(0, 10).forEach(x -> roundsKeys.add(generateRoundKey(x)));
     }
@@ -55,28 +68,6 @@ public abstract class AESCipher {
         for (int i = 0, idx = 0; i < matrixSize; i++) {
             for (int j = 0; j < matrixSize; j++) {
                 stateMatrix[j][i] = key[idx++];
-            }
-        }
-        return stateMatrix;
-    }
-
-    private static int[][] createBlocks(byte[] bytes) {
-        int[][] stateMatrix = new int[4][4];
-        for (int i = 0, idx = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                stateMatrix[j][i] = bytes[idx++];
-            }
-        }
-        return stateMatrix;
-    }
-
-    private static int[][] lessThanSixteenBlocks(byte[] bytes) {
-        int[][] stateMatrix = new int[4][4];
-        for (int i = 0, idx = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                if (idx < bytes.length) stateMatrix[j][i] = bytes[idx++];
-                else stateMatrix[j][i] = 16 - idx;
-                
             }
         }
         return stateMatrix;
@@ -122,16 +113,6 @@ public abstract class AESCipher {
     private static int[] xorWords(int[] w1, int[] w2) {
         int[] result = new int[w1.length];
         IntStream.range(0, w1.length).forEach(x -> result[x] = w1[x] ^ w2[x]);
-        return result;
-    }
-
-    private static int[][] addRoundKey(int[][] block, int[][] roundKey) {
-        int[][] result = new int[block.length][block.length];
-        for (int i = 0; i < block.length; i++) {
-            for (int j = 0; j < block.length; j++) {
-                result[j][i] = block[j][i] ^ roundKey[j][i];
-            }
-        }
         return result;
     }
 
