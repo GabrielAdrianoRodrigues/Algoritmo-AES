@@ -25,11 +25,21 @@ public class Application {
         try (FileOutputStream fos = new FileOutputStream(new File(c.getSelectedFile().getPath()+"/"+fileName+selectFile.getName().substring(selectFile.getName().lastIndexOf("."))))) {
             System.out.println("Digite a chave:");
             String key = sc.next();
-            fos.write(AESCipher.encrypt(Files.readAllBytes(selectFile.toPath()), key));
+            byte[] result = AESCipher.encrypt(Files.readAllBytes(selectFile.toPath()), key);
+            fos.write(result);
+            // convertByteToHexadecimal(result) -- para teste;
         } catch (IOException e) {}
 
         sc.close();
     }
 
+    public static void convertByteToHexadecimal(byte[] byteArray) {
+        String hex = "";
+        for (byte i : byteArray) {
+            hex += String.format("%02X ", i);
+        }
+
+        System.out.println("Texto cifrado em hexadecimal: " + hex);
+    }
 
 }

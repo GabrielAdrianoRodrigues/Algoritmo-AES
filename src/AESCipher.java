@@ -32,7 +32,7 @@ public abstract class AESCipher {
         for (int[][] x : encryptedBlocks) {
             for (int i = 0; i < x.length; i++) {
                 for (int j = 0; j < x[i].length; j++) {
-                    result[idx++] = (byte) x[i][j];
+                    result[idx++] = (byte) x[j][i];
                 }
             }
         }
