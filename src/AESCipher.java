@@ -14,26 +14,33 @@ public abstract class AESCipher {
         {3,1,1,2}
     };
                                                                 
-    public static List<int[][]> encrypt(byte[] toEncrypt, String key) {
+    public static byte[] encrypt(byte[] toEncrypt, String key) {
         generateRoundsKeys(key); 
         buildEncryptBlocks(toEncrypt);
-        List<int[][]> result = new ArrayList<>();
+        List<int[][]> encryptedBlocks = new ArrayList<>();
         int[][] temp = new int[4][4];
         for(int i = 0; i < encryptBlocks.size(); i++) {
             temp = addRoundKey(encryptBlocks.get(i), roundsKeys.get(0));
             for (int j = 1; j < 10; j++) {
-                temp = subBytes(temp);
-                temp = shiftRows(temp);
-                // temp = shiftRows(subBytes(temp));
-                temp = mixColumns(temp);
-                temp = addRoundKey(temp, roundsKeys.get(j));
+                temp = addRoundKey(mixColumns(shiftRows(subBytes(temp))), roundsKeys.get(j));
             }
-            result.add(addRoundKey(shiftRows(subBytes(temp)), roundsKeys.get(10)));    
+            encryptedBlocks.add(addRoundKey(shiftRows(subBytes(temp)), roundsKeys.get(10)));    
         }
+        
+        int idx = 0;
+        byte[] result = new byte[encryptBlocks.size() * 16];
+        for (int[][] x : encryptedBlocks) {
+            for (int i = 0; i < x.length; i++) {
+                for (int j = 0; j < x[i].length; j++) {
+                    result[idx++] = (byte) x[i][j];
+                }
+            }
+        }
+        
         return result;
     }
 
-    public static int[][] mixColumns(int[][] matrix) {
+    private static int[][] mixColumns(int[][] matrix) {
         int[][] result = new int[4][4];
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
@@ -53,12 +60,12 @@ public abstract class AESCipher {
         if (n == 1) return r;
 
         int sum = L_TABLE[r >> 4][r & ((1 << 4) - 1)] + L_TABLE[n >> 4][n & ((1 << 4) - 1)];
-        if (sum > 0xFF) sum = sum - 0xFF;
-
+        sum = sum > 0xFF ? sum = sum - 0xFF : sum;
+        
         return E_TABLE[sum >> 4][sum & ((1 << 4) - 1)];
     }
 
-    public static List<int[][]> buildEncryptBlocks(byte[] toBuild) {
+    private static List<int[][]> buildEncryptBlocks(byte[] toBuild) {
         if (toBuild.length < 16) {
             encryptBlocks.add(createBlocks(toBuild));
             return encryptBlocks;
@@ -82,7 +89,7 @@ public abstract class AESCipher {
         return stateMatrix;
     }
 
-    public static int[][] addRoundKey(int[][] block, int[][] roundKey) {
+    private static int[][] addRoundKey(int[][] block, int[][] roundKey) {
         int[][] result = new int[block.length][block.length];
         for (int i = 0; i < block.length; i++) {
             for (int j = 0; j < block.length; j++) {
@@ -97,7 +104,7 @@ public abstract class AESCipher {
         IntStream.range(0, 10).forEach(x -> roundsKeys.add(generateRoundKey(x)));
     }
 
-    public static int[] generateKey(String[] keyToConvert) {
+    private static int[] generateKey(String[] keyToConvert) {
         return Stream.of(keyToConvert).mapToInt(Integer::parseInt).toArray();
     }
 
@@ -155,7 +162,7 @@ public abstract class AESCipher {
         return result;
     }
 
-    public static int[][] subBytes(int[][] matrix) {
+    private static int[][] subBytes(int[][] matrix) {
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                 matrix[j][i] = S_BOX[matrix[j][i] >> 4][matrix[j][i] & ((1 << 4) - 1)];
@@ -164,7 +171,7 @@ public abstract class AESCipher {
         return matrix;
     }
 
-    public static int[][] shiftRows(int[][] matrix) {
+    private static int[][] shiftRows(int[][] matrix) {
         return new int[][]{
             {matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3]},
             {matrix[1][1], matrix[1][2], matrix[1][3], matrix[1][0]},
