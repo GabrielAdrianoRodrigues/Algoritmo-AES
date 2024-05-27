@@ -14,19 +14,23 @@ public abstract class AESCipher {
         {3,1,1,2}
     };
                                                                 
-    public static int[][] encrypt(byte[] toEncrypt, String key) {
+    public static List<int[][]> encrypt(byte[] toEncrypt, String key) {
         generateRoundsKeys(key); 
         buildEncryptBlocks(toEncrypt);
+        List<int[][]> result = new ArrayList<>();
         int[][] temp = new int[4][4];
         for(int i = 0; i < encryptBlocks.size(); i++) {
             temp = addRoundKey(encryptBlocks.get(i), roundsKeys.get(0));
             for (int j = 1; j < 10; j++) {
-                temp = shiftRows(subBytes(temp));
-                temp = addRoundKey(mixColumns(temp), roundsKeys.get(j));
+                temp = subBytes(temp);
+                temp = shiftRows(temp);
+                // temp = shiftRows(subBytes(temp));
+                temp = mixColumns(temp);
+                temp = addRoundKey(temp, roundsKeys.get(j));
             }
-            temp = addRoundKey(shiftRows(subBytes(temp)), roundsKeys.get(10));    
+            result.add(addRoundKey(shiftRows(subBytes(temp)), roundsKeys.get(10)));    
         }
-        return temp;
+        return result;
     }
 
     public static int[][] mixColumns(int[][] matrix) {
@@ -54,17 +58,18 @@ public abstract class AESCipher {
         return E_TABLE[sum >> 4][sum & ((1 << 4) - 1)];
     }
 
-    private static void buildEncryptBlocks(byte[] toBuild) {
+    public static List<int[][]> buildEncryptBlocks(byte[] toBuild) {
         if (toBuild.length < 16) {
             encryptBlocks.add(createBlocks(toBuild));
-            return;
+            return encryptBlocks;
         } 
         IntStream.range(0, (toBuild.length / 16)).forEach(x -> encryptBlocks.add(createBlocks(Arrays.copyOfRange(toBuild, x*16, 16*(x+1)))));
         if(toBuild.length % 16 == 0) {  
             encryptBlocks.add(new int[][]{{16, 16, 16, 16},{16, 16, 16, 16},{16, 16, 16, 16},{16, 16, 16, 16}});
-            return;
+            return encryptBlocks;
         } 
         encryptBlocks.add(createBlocks(Arrays.copyOfRange(toBuild, toBuild.length / 16 * 16, toBuild.length)));
+        return encryptBlocks;
     }
 
     private static int[][] createBlocks(byte[] bytes) {
@@ -92,7 +97,7 @@ public abstract class AESCipher {
         IntStream.range(0, 10).forEach(x -> roundsKeys.add(generateRoundKey(x)));
     }
 
-    private static int[] generateKey(String[] keyToConvert) {
+    public static int[] generateKey(String[] keyToConvert) {
         return Stream.of(keyToConvert).mapToInt(Integer::parseInt).toArray();
     }
 
