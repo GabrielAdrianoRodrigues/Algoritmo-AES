@@ -165,7 +165,12 @@ public abstract class AESCipher {
     private static int[][] subBytes(int[][] matrix) {
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
-                matrix[j][i] = S_BOX[matrix[j][i] >> 4][matrix[j][i] & ((1 << 4) - 1)];
+                int linha = matrix[j][i] >> 4;
+                int coluna = matrix[j][i] & ((1 << 4) - 1);
+                linha = linha < 0 ? linha = 0 : linha;
+                coluna = coluna < 0 ? coluna = 0 : coluna;
+
+                matrix[j][i] = S_BOX[linha][coluna];
             }
         }
         return matrix;
