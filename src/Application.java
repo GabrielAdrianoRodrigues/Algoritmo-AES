@@ -18,7 +18,7 @@ public class Application {
         // byte[] teste = "DESENVOLVIMENTOO12345678901234567890123456789".getBytes();
         // AESCipher.buildEncryptBlocks(teste);
 
-        // ## Teste para testar addRoundKey e subBytes
+        // ## Teste para passo a passo até mixColumns
         //  int[][] teste2 = new int[][]{{0x44, 0x4e, 0x56, 0x4e}, 
         //              {0x45, 0x56, 0x49, 0x54}, 
         //              {0x53, 0x4f, 0x4d, 0x4f}, 
@@ -27,9 +27,11 @@ public class Application {
         //                               {0x42, 0x46, 0x4a, 0x4e},
         //                               {0x43, 0x47, 0x4b, 0x4f},
         //                               {0x44, 0x48, 0x4c, 0x50}};
-        // //  int [][] result = AESCipher.addRoundKey(teste2, roundteste); //-- método que retorna o valor do método privado addRoundKey
         // int[][] a = AESCipher.addRoundKey(teste2, roundteste);
-        // int[][] result = AESCipher.subBytes(a);
+        // int[][] b = AESCipher.subBytes(a);
+        // int[][] c = AESCipher.shiftRows(b);
+        // int[][] result = AESCipher.mixColumns(c);
+
         //  System.out.println();
         //      for (int i = 0; i < result.length; i++) {
         //          for (int j = 0; j < result[i].length; j++) {
@@ -38,8 +40,6 @@ public class Application {
         //          System.out.println();
         //      }
         //  System.out.println();
-
-
 
         // ## Teste para gerar roundKeys
         // AESCipher.encrypt(teste, "65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80");

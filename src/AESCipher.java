@@ -14,16 +14,44 @@ public abstract class AESCipher {
         {3,1,1,2}
     };
                                                                 
-    public static void encrypt(byte[] toEncrypt, String key) {
+    public static int[][] encrypt(byte[] toEncrypt, String key) {
         generateRoundsKeys(key); 
         buildEncryptBlocks(toEncrypt);
-        int[][] temp;
+        int[][] temp = new int[4][4];
         for(int i = 0; i < encryptBlocks.size(); i++) {
             temp = addRoundKey(encryptBlocks.get(i), roundsKeys.get(0));
             for (int j = 1; j < 10; j++) {
                 temp = shiftRows(subBytes(temp));
+                temp = addRoundKey(mixColumns(temp), roundsKeys.get(j));
+            }
+            temp = addRoundKey(shiftRows(subBytes(temp)), roundsKeys.get(10));    
+        }
+        return temp;
+    }
+
+    public static int[][] mixColumns(int[][] matrix) {
+        int[][] result = new int[4][4];
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                result[j][i] = getGaloisMultiplication(getW(matrix, i), multipMatrix[j]);
             }
         }
+        return result;
+    }
+
+    private static int getGaloisMultiplication(int[] r, int[] n) {
+        return galoisMultiplication(r[0], n[0]) ^ galoisMultiplication(r[1], n[1]) ^ galoisMultiplication(r[2], n[2]) ^  galoisMultiplication(r[3], n[3]);
+    }
+
+    private static int galoisMultiplication(int r, int n) {
+        if (r == 0 || n == 0) return 0;
+        if (r == 1) return n;
+        if (n == 1) return r;
+
+        int sum = L_TABLE[r >> 4][r & ((1 << 4) - 1)] + L_TABLE[n >> 4][n & ((1 << 4) - 1)];
+        if (sum > 0xFF) sum = sum - 0xFF;
+
+        return E_TABLE[sum >> 4][sum & ((1 << 4) - 1)];
     }
 
     private static void buildEncryptBlocks(byte[] toBuild) {
@@ -135,7 +163,7 @@ public abstract class AESCipher {
         return new int[][]{
             {matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3]},
             {matrix[1][1], matrix[1][2], matrix[1][3], matrix[1][0]},
-            {matrix[2][2], matrix[2][3], matrix[2][0], matrix[2][3]},       
+            {matrix[2][2], matrix[2][3], matrix[2][0], matrix[2][1]},       
             {matrix[3][3], matrix[3][0], matrix[3][1], matrix[3][2]}   
         };
     }
