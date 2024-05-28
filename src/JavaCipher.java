@@ -12,7 +12,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
 
-//Bernardo e Nicole
 public class JavaCipher {
 
     public static final String ALGORITMO = "AES";
